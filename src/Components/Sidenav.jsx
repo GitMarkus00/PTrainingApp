@@ -44,7 +44,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(0, 1),
-  
+
   ...theme.mixins.toolbar,
   justifyContent: 'flex-end',
 }));
@@ -101,27 +101,27 @@ export default function Sidenav() {
         </DrawerHeader>
         <Divider />
         <List>
-          
-            <ListItem  disablePadding onClick={ () => {navigate("/")} }>
-              <ListItemButton>
-                <ListItemIcon>
-                  <InboxIcon />
-                </ListItemIcon>
-                <ListItemText primary="Customers" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem  disablePadding onClick={ () => {navigate("/traininglist")} }>
-              <ListItemButton>
-                <ListItemIcon>
-                  <InboxIcon />
-                </ListItemIcon>
-                <ListItemText primary="Training" />
-              </ListItemButton>
-            </ListItem>
-          
+
+          <ListItem disablePadding onClick={() => { navigate("/") }}>
+            <ListItemButton>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary="Customers" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding onClick={() => { navigate("/traininglist") }}>
+            <ListItemButton>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary="Training" />
+            </ListItemButton>
+          </ListItem>
+
         </List>
       </Drawer>
-      
+
     </Box>
   );
 }

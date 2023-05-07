@@ -14,6 +14,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Typography } from '@mui/material';
 import Sidenav from './Sidenav';
 import dayjs from 'dayjs';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 
 
 function TrainingList() {
@@ -22,26 +25,28 @@ function TrainingList() {
       const [order, setOrder] = useState('asc');
       const [search, setSearch] = useState('');
 
-      const fetchData = () => {
-  fetch('http://traineeapp.azurewebsites.net/api/trainings')
-    .then(resp => resp.json())
-    .then(async data => {
-      console.log(data.content);
-      const trainingsWithCustomers = await Promise.all(
-        data.content.map(async training => {
-          const customerResponse = await fetch(training.links.find(link => link.rel === 'customer').href);
-          const customerData = await customerResponse.json();
-          return { ...training, customerName: `${customerData.firstname} ${customerData.lastname}` };
-        })
-      );
-      console.log(trainingsWithCustomers);
-      setTrainings(trainingsWithCustomers);
-    })
-    .catch(error => console.log(error));
-};
+      useEffect(() => {
+            const fetchTrainings = async () => {
+                  try {
+                        const response = await fetch('https://traineeapp.azurewebsites.net/gettrainings');
+                        const trainingsData = await response.json();
+
+                        const trainingsWithCustomers = trainingsData.map(training => {
+                              return { ...training, customerName: `${training.customer.firstname} ${training.customer.lastname}` };
+                        });
+
+                        setTrainings(trainingsWithCustomers);
+                  } catch (error) {
+                        console.log(error);
+                  }
+            };
 
 
-      useEffect(fetchData, []);
+
+
+
+            fetchTrainings();
+      }, []);
 
       const handleSort = (property) => (event) => {
             const isAsc = orderBy === property && order === 'asc';
@@ -49,12 +54,30 @@ function TrainingList() {
             setOrderBy(property);
       };
 
+      const handleDelete = (id) => {
+            if (!window.confirm("Do you want to delete this training session?")) return;
+            const options = {
+                  method: 'DELETE',
+                  headers: {
+                        'Content-Type': 'application/json',
+                  },
+            };
+            fetch(`https://traineeapp.azurewebsites.net/api/trainings/${id}`, options)
+                  .then((resp) => {
+                        if (resp.ok) {
+                              setTrainings(trainings.filter((training) => training.id !== id));
+                        }
+                  })
+                  .catch((error) => console.error(error));
+      };
+
+
 
 
       const columns = [
             { id: 'customerName', label: 'Customer' },
             { id: 'date', label: 'Date' },
-            { id: 'duration', label: 'Duration' },
+            { id: 'duration', label: 'Duration (min)' },
             { id: 'activity', label: 'Activity' },
       ];
 
@@ -84,9 +107,9 @@ function TrainingList() {
                   <Sidenav />
 
                   <Paper>
-                        <Box height="100vh" display="flex" justifyContent="center" alignItems="center">
+                        <Box height="100vh" sx={{ mb: -16 }} display="flex" justifyContent="center" alignItems="center">
                               <TableContainer component={Paper} sx={{ border: 1, borderColor: 'primary.main' }}>
-                                    <Typography variant='h4' align="left" padding={2}>
+                                    <Typography variant='h4' align="left" padding={3} sx={{ mb: -6 }}>
                                           Trainings
                                     </Typography>
                                     <TextField
@@ -124,13 +147,19 @@ function TrainingList() {
                                           </TableHead>
                                           <TableBody>
                                                 {sortedTrainings.map(training => (
-                                                      <TableRow key={training.links[0].href}>
+                                                      <TableRow key={training.id}>
                                                             {columns.map(column => (
                                                                   <TableCell key={column.id}>{training[column.id]}</TableCell>
                                                             ))}
+                                                            <TableCell>
+                                                                  <IconButton aria-label="delete" onClick={() => handleDelete(training.id)}>
+                                                                        <DeleteIcon />
+                                                                  </IconButton>
+                                                            </TableCell>
                                                       </TableRow>
                                                 ))}
                                           </TableBody>
+
                                     </Table>
                               </TableContainer>
                         </Box>
