@@ -23,14 +23,23 @@ function TrainingList() {
       const [search, setSearch] = useState('');
 
       const fetchData = () => {
-            fetch('http://traineeapp.azurewebsites.net/api/trainings')
-                  .then(resp => resp.json())
-                  .then(data => {
-                        console.log(data.content);
-                        setTrainings(data.content);
-                  })
-                  .catch(error => console.log(error));
-      };
+  fetch('http://traineeapp.azurewebsites.net/api/trainings')
+    .then(resp => resp.json())
+    .then(async data => {
+      console.log(data.content);
+      const trainingsWithCustomers = await Promise.all(
+        data.content.map(async training => {
+          const customerResponse = await fetch(training.links.find(link => link.rel === 'customer').href);
+          const customerData = await customerResponse.json();
+          return { ...training, customerName: `${customerData.firstname} ${customerData.lastname}` };
+        })
+      );
+      console.log(trainingsWithCustomers);
+      setTrainings(trainingsWithCustomers);
+    })
+    .catch(error => console.log(error));
+};
+
 
       useEffect(fetchData, []);
 
@@ -59,6 +68,7 @@ function TrainingList() {
             }
             return 0;
       }).filter(training =>
+            training.customerName.toLowerCase().includes(search.toLowerCase()) ||
             training.date.toLowerCase().includes(search.toLowerCase()) ||
             training.duration.toString().toLowerCase().includes(search.toLowerCase()) ||
             training.activity.toLowerCase().includes(search.toLowerCase())
@@ -105,7 +115,7 @@ function TrainingList() {
                                                                         direction={orderBy === column.id ? order : 'asc'}
                                                                         onClick={handleSort(column.id)}
                                                                   >
-                                                                        
+
                                                                         {column.label}
                                                                   </TableSortLabel>
                                                             </TableCell>
